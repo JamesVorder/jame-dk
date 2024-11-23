@@ -230,6 +230,14 @@ public class TreeCopier<P> implements TreeVisitor<JCTree,P> {
         return M.at(t.pos).ForeachLoop(var, expr, body);
     }
 
+    @Override
+    public JCTree visitCollectionCat(CollectionCatTree node, P p) {
+        JCCollectionCat t = (JCCollectionCat) node;
+        JCExpression lhs = copy(t.lhs, p);
+        JCExpression rhs = copy(t.rhs, p);
+        return M.at(t.pos).CollCat(lhs, rhs);
+    }
+
     @DefinedBy(Api.COMPILER_TREE)
     public JCTree visitForLoop(ForLoopTree node, P p) {
         JCForLoop t = (JCForLoop) node;

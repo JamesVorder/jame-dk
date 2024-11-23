@@ -361,6 +361,7 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         MUL,                             // *
         DIV,                             // /
         MOD,                             // %
+        COLLECTION_CAT_OP,               // ***
 
         /** Assignment operators, of type Assignop.
          */
@@ -1294,6 +1295,33 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
         public Tag getTag() {
             return FOREACHLOOP;
         }
+    }
+
+    public static class JCCollectionCat extends JCExpression implements CollectionCatTree {
+
+        public JCExpression lhs;
+        public JCExpression rhs;
+        protected JCCollectionCat(JCExpression lhs, JCExpression rhs) {
+            // This expression is only valid if both sides are Collections
+            // but the below method of checking doesn't work...
+//            assert(lhs instanceof Collection);
+//            assert(rhs instanceof  Collection);
+            this.lhs = lhs;
+            this.rhs = rhs;
+        }
+
+        @Override
+        public Tag getTag() { return NO_TAG; }
+        @Override
+        public Kind getKind() { return Kind.COLLECTION_CAT; }
+        @Override
+        public ExpressionTree getLeftOperand() { return this.lhs; }
+        @Override
+        public ExpressionTree getRightOperand() { return rhs; }
+        @Override
+        public void accept(Visitor v) { v.visitCollectionCat(this); }
+        @Override
+        public <R,D> R accept(TreeVisitor<R,D> v, D d) { return v.visitCollectionCat(this, d); }
     }
 
     /**
@@ -3529,6 +3557,7 @@ public abstract class JCTree implements Tree, Cloneable, DiagnosticPosition {
     /** A generic visitor class for trees.
      */
     public abstract static class Visitor {
+        public void visitCollectionCat(JCCollectionCat that) { visitTree(that); }
         public void visitTopLevel(JCCompilationUnit that)    { visitTree(that); }
         public void visitPackageDef(JCPackageDecl that)      { visitTree(that); }
         public void visitImport(JCImport that)               { visitTree(that); }

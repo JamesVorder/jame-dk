@@ -202,6 +202,15 @@ public interface TreeVisitor<R,P> {
     R visitEnhancedForLoop(EnhancedForLoopTree node, P p);
 
     /**
+     * Visit a CollectionCatTree node.
+     *
+     * @param node the node being visited
+     * @param p a parameter value
+     * @return a result value
+     */
+    R visitCollectionCat(CollectionCatTree node, P p);
+
+    /**
      * Visits a {@code ForLoopTree} node.
      * @param node the node being visited
      * @param p a parameter value

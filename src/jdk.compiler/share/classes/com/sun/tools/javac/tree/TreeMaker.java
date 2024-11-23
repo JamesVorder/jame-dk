@@ -480,6 +480,12 @@ public class TreeMaker implements JCTree.Factory {
         return tree;
     }
 
+    public JCCollectionCat CollCat(JCExpression lhs, JCExpression rhs) {
+        JCCollectionCat tree = new JCCollectionCat(lhs, rhs);
+        tree.pos = pos;
+        return tree;
+    }
+
     public JCTypeCast TypeCast(JCTree clazz, JCExpression expr) {
         JCTypeCast tree = new JCTypeCast(clazz, expr);
         tree.pos = pos;

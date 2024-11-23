@@ -1185,7 +1185,9 @@ public class TreeInfo {
         case SR:
         case USR: return shiftPrec;
         case PLUS:
-        case MINUS: return addPrec;
+        case MINUS:
+        case COLLECTION_CAT_OP:
+            return addPrec;
         case MUL:
         case DIV:
         case MOD: return mulPrec;

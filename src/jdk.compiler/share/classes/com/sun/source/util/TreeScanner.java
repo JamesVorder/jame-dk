@@ -725,6 +725,13 @@ public class TreeScanner<R,P> implements TreeVisitor<R,P> {
         return r;
     }
 
+    @Override
+    public R visitCollectionCat(CollectionCatTree node, P p) {
+        R r = scan(node.getLeftOperand(), p);
+        r = scanAndReduce(node.getRightOperand(), p, r);
+        return r;
+    }
+
     /**
      * {@inheritDoc}
      *

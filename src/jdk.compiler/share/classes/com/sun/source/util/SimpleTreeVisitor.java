@@ -263,6 +263,9 @@ public class SimpleTreeVisitor <R,P> implements TreeVisitor<R,P> {
         return defaultAction(node, p);
     }
 
+    @Override
+    public R visitCollectionCat(CollectionCatTree node, P p) { return defaultAction(node, p); }
+
     /**
      * {@inheritDoc}
      *

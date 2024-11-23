@@ -352,6 +352,12 @@ public class TreeTranslator extends JCTree.Visitor {
         result = tree;
     }
 
+    public void visitCollectionCat(JCCollectionCat tree) {
+        tree.lhs = translate(tree.lhs);
+        tree.rhs = translate(tree.rhs);
+        result = tree;
+    }
+
     public void visitTypeCast(JCTypeCast tree) {
         tree.clazz = translate(tree.clazz);
         tree.expr = translate(tree.expr);

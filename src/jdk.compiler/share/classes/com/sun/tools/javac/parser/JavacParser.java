@@ -36,6 +36,7 @@ import com.sun.source.tree.CaseTree;
 import com.sun.source.tree.MemberReferenceTree.ReferenceMode;
 import com.sun.source.tree.ModuleTree.ModuleKind;
 
+import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.*;
 import com.sun.tools.javac.code.Source.Feature;
 import com.sun.tools.javac.file.PathFileObject;
@@ -1272,7 +1273,13 @@ public class JavacParser implements Parser {
                 odStack[top] = term3();
             }
             while (top > 0 && prec(topOp.kind) >= prec(token.kind)) {
-                odStack[top - 1] = F.at(topOp.pos).Binary(optag(topOp.kind), odStack[top - 1], odStack[top]);
+                if (topOp.kind == TRIPLESTAR) {
+                    // Conditionally, if ***, create something else on odStack
+                    odStack[top - 1] = F.at(topOp.pos).CollCat(odStack[top - 1], odStack[top]);
+                }
+                else {
+                    odStack[top - 1] = F.at(topOp.pos).Binary(optag(topOp.kind), odStack[top - 1], odStack[top]);
+                }
                 top--;
                 topOp = opStack[top];
             }
@@ -5540,6 +5547,8 @@ public class JavacParser implements Parser {
             return MOD_ASG;
         case INSTANCEOF:
             return TYPETEST;
+        case TRIPLESTAR:
+            return COLLECTION_CAT_OP;
         default:
             return NO_TAG;
         }
