@@ -965,6 +965,7 @@ public class JavacParser implements Parser {
     /** terms can be either expressions or types.
      */
     public JCExpression parseExpression() {
+        // This is kind of the entry point to parsing an expression of the form x = y + z, etc.
         return term(EXPR);
     }
 
@@ -1098,12 +1099,13 @@ public class JavacParser implements Parser {
 
 
     protected JCExpression term(int newmode) {
+        // This is the first step of parsing an expression.
         int prevmode = mode;
         setMode(newmode);
-        JCExpression t = term();
+        JCExpression t = term();  // Start a recursive evaluation of hte expression
         setLastMode(mode);
         setMode(prevmode);
-        return t;
+        return t;  // When call stack is finished, we return the JCExpression that we built
     }
 
     /**
@@ -1120,7 +1122,9 @@ public class JavacParser implements Parser {
      *  }
      */
     JCExpression term() {
-        JCExpression t = term1();
+        // If the expression starts with the form x =, or @, or CUSTOM, then process the rest of the statement
+        // otherwise, you're done. i.e. int x;
+        JCExpression t = term1();  // Go read the expression
         if (isMode(EXPR) &&
             (token.kind == EQ || PLUSEQ.compareTo(token.kind) <= 0 && token.kind.compareTo(GTGTGTEQ) <= 0))
             return termRest(t);
@@ -1129,12 +1133,15 @@ public class JavacParser implements Parser {
     }
 
     JCExpression termRest(JCExpression t) {
+        // This processes the second half of the statement
+        // we already have something like x= x+= x-=, etc.
+        // In the case of collection concatenation, we'll have x =
         switch (token.kind) {
         case EQ: {
             int pos = token.pos;
-            nextToken();
-            selectExprMode();
-            JCExpression t1 = term();
+            nextToken(); // advance to the next token
+            selectExprMode();  // TODO: What is this actually doing and does it matter for us?
+            JCExpression t1 = term();  // This is a recursive call, but sneaky.
             return toP(F.at(pos).Assign(t, t1));
         }
         case PLUSEQ:
@@ -1423,6 +1430,9 @@ public class JavacParser implements Parser {
      *  SuperSuffix    = Arguments | "." Ident [Arguments]
      */
     protected JCExpression term3() {
+        // This is the bottom level term reader
+        // It's called by term -> term1 -> term2 as the first step
+        // after this runs, then the rest of the expression is evaluated
         int pos = token.pos;
         JCExpression t;
         List<JCExpression> typeArgs = typeArgumentsOpt(EXPR);
@@ -1558,6 +1568,7 @@ public class JavacParser implements Parser {
             if (isMode(EXPR) && !isMode(NOLAMBDA) && peekToken(ARROW)) {
                 t = lambdaExpressionOrStatement(false, false, pos);
             } else {
+                // for instance, in "x =", x is an identifier
                 t = toP(F.at(token.pos).Ident(ident()));
                 loop: while (true) {
                     pos = token.pos;
@@ -1703,6 +1714,8 @@ public class JavacParser implements Parser {
             break;
         case BYTE: case SHORT: case CHAR: case INT: case LONG: case FLOAT:
         case DOUBLE: case BOOLEAN:
+            // for instance, in "int x =", int would be INT
+            // the brackets thing is checking for []
             if (typeArgs != null) illegal();
             t = bracketsSuffix(bracketsOpt(basicType()));
             break;
@@ -1810,6 +1823,7 @@ public class JavacParser implements Parser {
     }
 
     JCExpression term3Rest(JCExpression t, List<JCExpression> typeArgs) {
+        // After term3 is done getting the first term of an operation, this gets the rest
         if (typeArgs != null) illegal();
         while (true) {
             int pos1 = token.pos;
@@ -1841,7 +1855,9 @@ public class JavacParser implements Parser {
                     t = to(F.at(pos1).Indexed(t, t1));
                 }
                 accept(RBRACKET);
-            } else if (token.kind == DOT) {
+            }
+            else if (token.kind == DOT) {
+                // i.e. "x." ... x would be an identifier in term3, and "." would be the next token
                 nextToken();
                 typeArgs = typeArgumentsOpt(EXPR);
                 if (token.kind == SUPER && isMode(EXPR)) {
@@ -1878,12 +1894,14 @@ public class JavacParser implements Parser {
                     t = argumentsOpt(typeArgs, typeArgumentsOpt(t));
                     typeArgs = null;
                 }
-            } else if (isMode(EXPR) && token.kind == COLCOL) {
+            }
+            else if (isMode(EXPR) && token.kind == COLCOL) {
                 selectExprMode();
                 if (typeArgs != null) return illegal();
                 accept(COLCOL);
                 t = memberReferenceSuffix(pos1, t);
-            } else {
+            }
+            else {
                 if (!annos.isEmpty()) {
                     if (permitTypeAnnotationsPushBack)
                         typeAnnotationsPushedBack = annos;
@@ -4117,14 +4135,16 @@ public class JavacParser implements Parser {
                     checkSourceLevel(token.pos, Feature.IMPLICIT_CLASSES);
                     defs.appendList(topLevelMethodOrFieldDeclaration(mods, docComment));
                     isImplicitClass = true;
-                } else if (isDefiniteStatementStartToken()) {
+                }
+                else if (isDefiniteStatementStartToken()) {
                     int startPos = token.pos;
                     List<JCStatement> statements = blockStatement();
                     defs.append(syntaxError(startPos,
                                             statements,
                                             Errors.StatementNotExpected,
                                             true));
-                } else {
+                }
+                else {
                     JCTree def = typeDeclaration(mods, docComment);
                     if (def instanceof JCExpressionStatement statement)
                         def = statement.expr;

@@ -1285,6 +1285,8 @@ public class Attr extends JCTree.Visitor {
                 // Field initializer expression need to be entered.
                 annotate.queueScanTreeAndTypeAnnotate(tree.init, env, tree.sym, tree.pos());
                 annotate.flush();
+                // TODO: We're landing here and getting an error because we can't annotate our *** expression
+                // TODO: Skip the *** expression in the same way as binary operations are skipped
             }
         }
 
